@@ -1,89 +1,78 @@
 import PropTypes from 'prop-types';
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { ImageGalleryStyle } from './ImageGallery.styled';
 import { ImageGalleryItem } from '../ImageGalleryItem/ImageGalleryItem';
-import { getImagems } from '../../services/getImages';
+import { getImages } from '../../services/getImages';
 import { Loader } from 'components/Loader/Loader';
 import { Button } from '../Button/Button';
 
-export class ImageGallery extends Component {
-  state = {
-    images: [],
-    loading: false,
-    error: '',
-    showButton: false,
-    page: 1,
-  };
+export const ImageGallery = ({ value }) => {
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showButton, setShowButton] = useState(false);
+  const [page, setPage] = useState(1);
 
-  componentDidUpdate(prevProps, prevState) {
-    const { page } = this.state;
-    const { value } = this.props;
-    if (
-      this.props.value !== prevProps.value ||
-      this.props.page !== prevProps.page
-    ) {
-      this.setState({ loading: true, images: [] });
-
-      getImagems(value.trim())
-        .then(response => response.json())
-        .then(images => {
-          this.setState({
-            images: images.hits,
-            totalPages: Math.ceil(images.totalHits / 12),
-          });
-
-          if (Math.ceil(images.totalHits / 12) === 0) {
-            toast.error('No images');
-            return;
-          }
-
-          if (page < Math.ceil(images.totalHits / 12)) {
-            return this.setState({ showButton: true });
-          }
-          this.setState({ showButton: false });
-        })
-        .catch(error => console.log(error))
-        .finally(() => this.setState({ loading: false }));
+  useEffect(() => {
+    if (!value) {
+      return;
     }
 
-    if (prevState.page !== page && page !== 1) {
-      getImagems(value.trim(), page)
-        .then(response => response.json())
-        .then(images => {
-          this.setState({
-            images: [...prevState.images, ...images.hits],
-          });
+    setLoading(true);
+    setImages([]);
+    setPage(1);
 
-          if (page < Math.ceil(images.totalHits / 12)) {
-            return this.setState({ showButton: true });
-          }
-          this.setState({ showButton: false });
-        })
-        .catch(error => console.log(error));
+    getImages(value)
+      .then(images => {
+        setImages(images.hits);
+
+        if (Math.ceil(images.totalHits / 12) === 0) {
+          toast.error('No images');
+          return;
+        }
+
+        if (images.totalHits > 12) {
+          return setShowButton(true);
+        }
+        setShowButton(false);
+      })
+      .catch(error => toast.error(error))
+      .finally(() => setLoading(false));
+  }, [value]);
+
+  useEffect(() => {
+    if (page === 1) {
+      return;
     }
-  }
+    getImages(value, page)
+      .then(images => {
+        setImages(prevImages => [...prevImages, ...images.hits]);
 
-  loadMore = () => {
-    this.setState(({ page }) => ({ page: page + 1 }));
+        if (page < Math.ceil(images.totalHits / 12)) {
+          return setShowButton(true);
+        }
+        setShowButton(false);
+      })
+      .catch(error => toast.error(error));
+  }, [page, value]);
+
+  const loadMore = () => {
+    setPage(page => page + 1);
   };
 
-  render() {
-    const loadMore = this.loadMore;
-    return (
-      <>
-        <ImageGalleryStyle>
-          {this.state.loading && <Loader></Loader>}
+  return (
+    <>
+      <ImageGalleryStyle>
+        {loading && <Loader></Loader>}
 
-          {this.state.images.map(img => {
-            return <ImageGalleryItem key={img.id} img={img} />;
-          })}
-        </ImageGalleryStyle>
-        {this.state.showButton && <Button loadMore={loadMore} />}
-      </>
-    );
-  }
-}
+        {images.map(img => {
+          return <ImageGalleryItem key={img.id} img={img} />;
+        })}
+      </ImageGalleryStyle>
+      {showButton && <Button loadMore={loadMore} />}
+    </>
+  );
+};
 
 ImageGallery.propTypes = {
   value: PropTypes.any.isRequired,
