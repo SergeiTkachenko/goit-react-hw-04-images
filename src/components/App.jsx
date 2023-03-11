@@ -6,7 +6,7 @@ import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Searchbar } from './Searchbar/Searchbar';
 
 export const App = () => {
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState('');
 
   const handleSearchFormSubmit = images => {
     setImages(images);

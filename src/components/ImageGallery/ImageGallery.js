@@ -7,7 +7,7 @@ import { getImages } from '../../services/getImages';
 import { Loader } from 'components/Loader/Loader';
 import { Button } from '../Button/Button';
 
-export const ImageGallery = ({ value = null }) => {
+export const ImageGallery = ({ value }) => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showButton, setShowButton] = useState(false);
