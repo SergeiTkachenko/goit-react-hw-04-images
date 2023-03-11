@@ -7,7 +7,7 @@ import { getImages } from '../../services/getImages';
 import { Loader } from 'components/Loader/Loader';
 import { Button } from '../Button/Button';
 
-export const ImageGallery = ({ value }) => {
+export const ImageGallery = ({ value = null }) => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showButton, setShowButton] = useState(false);
@@ -21,9 +21,10 @@ export const ImageGallery = ({ value }) => {
     setLoading(true);
     setImages([]);
     setPage(1);
-
+    console.log('Before request');
     getImages(value)
       .then(images => {
+        console.log('Response received');
         setImages(images.hits);
 
         if (Math.ceil(images.totalHits / 12) === 0) {
